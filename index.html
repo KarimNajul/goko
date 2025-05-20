@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <title>Ticket para Goko cumple</title>
+  <title>Goko cumple</title>
   <style>
     body {
       margin: 0;
@@ -76,7 +76,7 @@
 </head>
 <body>
   <img src="img/goko.webp" alt="Goko" />
-  <h1>Ticket para Goko cumple</h1>
+  <h1>Timba de recompensas</h1>
   <button onclick="mostrarPopup()">Obtener Ticket</button>
 
   <!-- Overlay y popup -->
@@ -92,20 +92,57 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
   <script>
-    const opciones = [
-      "Vale para entrar a su casa",
-      "Vale para robar su garrafa de gas",
-      "Vale para un porro",
-      "Vale para robarle un animal"
+    // Opciones con su "peso" o "probabilidad relativa"
+    const opcionesConPeso = [
+      { texto: "Válido por: entrar a su casa", peso: 10 },
+      { texto: "Válido por: robar su garrafa de gas", peso: 10 },
+      { texto: "Válido por: un porro", peso: 50 },
+      { texto: "Válido por: un dibujo", peso: 10 },
+      { texto: "Válido por: un baile de emote random", peso: 20 },
+      { texto: "Válido por: un foto con el Goko", peso: 20 },
+      { texto: "Válido por: un autografo Goko", peso: 20 },
+      { texto: "Válido por: un grito dramático en plena calle sin explicación", peso: 30 },
+      { texto: "Válido por: bailar como robot durante 1 minuto en cualquier lugar", peso: 50 },
+      { texto: "Válido por: hacer una escena de telenovela con quien elija el grupo", peso: 25 },
+      { texto: "Válido por: cantar una canción inventada en el momento (tema a elección)", peso: 10 },
+      { texto: "Válido por: caminar como pingüino durante 3 cuadras", peso: 4 },
+      { texto: "Válido por: hablar con acento español todo un almuerzo", peso: 51 },
+      { texto: "Válido por: imitar a un animal hasta que alguien adivine cuál es", peso: 3 },
+      { texto: "Válido por: sacarse una selfie con un árbol y decirle que lo quiere", peso: 2 },
+      { texto: "Válido por: un abrazo incómodo de 10 segundos", peso: 35 },
+      { texto: "Válido por: que le preparen un mate (aunque no tenga ganas)", peso: 24 },
+      { texto: "Válido por: una serenata con tema de amor... cantado desafinado", peso: 28 },
+      { texto: "Válido por: ayuda para escapar de una situación social incómoda", peso: 41 },
+      { texto: "Válido por: un piropo en estilo medieval", peso: 34 },
+      { texto: "Válido por: hacerle una pregunta filosófica profunda a un extraño", peso: 7 },
+      { texto: "Válido por: actuar como si fuera famoso por 5 minutos y pedir fotos", peso: 12 },
+      { texto: "Válido por: usar un objeto como micrófono y dar un discurso motivacional", peso: 13 },
+      { texto: "Válido por: hablarle al espejo durante 1 minuto como su “yo del futuro”", peso: 16 },
+      { texto: "Válido por: que todos le canten el “Feliz Cumpleaños” en cámara lenta", peso: 18 },
+      { texto: "Válido por: que el grupo le prepare un trago sorpresa (puede ser rico o raro)", peso: 28 },
+      { texto: "Válido por: un karaoke grupal obligatorio (tema elegido por él)", peso: 30 },
+      { texto: "Válido por: elegir un reto para que TODOS hagan (mini venganza)", peso: 39 },
+      { texto: "Válido por: limpiar toda la casa", peso: 1 },
+      { texto: "Valido para robarle un animal", peso: 30 }
     ];
 
+    function elegirConPeso(opciones) {
+      const totalPeso = opciones.reduce((sum, op) => sum + op.peso, 0);
+      const rand = Math.random() * totalPeso;
+      let acumulado = 0;
+      for (const op of opciones) {
+        acumulado += op.peso;
+        if (rand < acumulado) {
+          return op.texto;
+        }
+      }
+    }
+
     function mostrarPopup() {
-      const opcion = opciones[Math.floor(Math.random() * opciones.length)];
+      const opcion = elegirConPeso(opcionesConPeso);
       document.getElementById('ticketText').innerText = opcion;
       document.getElementById('overlay').style.display = 'block';
       document.getElementById('popup').style.display = 'block';
-
-      // Guardamos la opción para usarla al crear PDF
       window.opcionActual = opcion;
     }
 
@@ -115,37 +152,24 @@
     }
 
     async function descargarPDF() {
-      // Usamos jsPDF para crear el PDF desde canvas
-
       const { jsPDF } = window.jspdf;
-
-      const pdf = new jsPDF({
-        unit: 'pt',
-        format: 'a4'
-      });
-
-      // Cargar la imagen goko como Image object para dibujar en canvas
+      const pdf = new jsPDF({ unit: 'pt', format: 'a4' });
       const img = new Image();
-      img.crossOrigin = "anonymous";  // Por si la imagen está en otro dominio
+      img.crossOrigin = "anonymous";
       img.src = "img/goko.webp";
 
       img.onload = function() {
         const pageWidth = pdf.internal.pageSize.getWidth();
         const pageHeight = pdf.internal.pageSize.getHeight();
 
-        // Crear un canvas para dibujar imagen + texto
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
-
-        // Definimos tamaño del canvas proporcional al PDF
         canvas.width = pageWidth;
         canvas.height = pageHeight;
 
-        // Fondo blanco para el PDF
         ctx.fillStyle = 'white';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-        // Dibujar imagen centrada horizontalmente y con margen arriba
         const imgMaxWidth = canvas.width * 0.8;
         const scale = imgMaxWidth / img.width;
         const imgWidth = img.width * scale;
@@ -154,19 +178,13 @@
         const imgY = 60;
         ctx.drawImage(img, imgX, imgY, imgWidth, imgHeight);
 
-        // Dibujar texto debajo
         ctx.fillStyle = 'black';
         ctx.font = "bold 24pt Arial";
         ctx.textAlign = "center";
         ctx.fillText(window.opcionActual || "Texto no definido", canvas.width / 2, imgY + imgHeight + 60);
 
-        // Convertir canvas a imagen base64
         const imgData = canvas.toDataURL("image/jpeg", 1.0);
-
-        // Agregar imagen al PDF
         pdf.addImage(imgData, 'JPEG', 0, 0, pageWidth, pageHeight);
-
-        // Guardar PDF
         pdf.save("ticket_goko.pdf");
       };
 
