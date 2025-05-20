@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Ticket para Goko cumple</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: #000;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      font-family: Arial, sans-serif;
+      color: white;
+      text-shadow: 1px 1px 4px #000;
+    }
+    img {
+      max-width: 90vw;
+      max-height: 70vh;
+      object-fit: contain;
+      margin-bottom: 20px;
+      border-radius: 10px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+    }
+    h1 {
+      font-size: 2.2em;
+      margin-bottom: 15px;
+      text-align: center;
+    }
+    button {
+      padding: 10px 20px;
+      font-size: 1.1em;
+      background-color: #ff4081;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+      margin: 5px;
+    }
+    button:hover {
+      background-color: #e91e63;
+    }
+    #popup {
+      display: none;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: white;
+      color: black;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.6);
+      text-align: center;
+      z-index: 1000;
+      max-width: 90vw;
+    }
+    #popup img {
+      max-width: 200px;
+      border-radius: 8px;
+      margin-bottom: 15px;
+    }
+    #overlay {
+      display: none;
+      position: fixed;
+      top: 0; left: 0;
+      width: 100vw; height: 100vh;
+      background-color: rgba(0,0,0,0.5);
+      z-index: 999;
+    }
+  </style>
+</head>
+<body>
+  <img src="img/goko.webp" alt="Goko" />
+  <h1>Ticket para Goko cumple</h1>
+  <button onclick="mostrarPopup()">Obtener Ticket</button>
+
+  <!-- Overlay y popup -->
+  <div id="overlay"></div>
+  <div id="popup">
+    <img src="img/ticket.webp" alt="Ticket" />
+    <p id="ticketText"></p>
+    <button onclick="descargarPDF()">Descargar Ticket en PDF</button>
+    <button onclick="cerrarPopup()">Cerrar</button>
+  </div>
+
+  <!-- jsPDF CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+  <script>
+    const opciones = [
+      "Vale para entrar a su casa",
+      "Vale para robar su garrafa de gas",
+      "Vale para un porro",
+      "Vale para robarle un animal"
+    ];
+
+    function mostrarPopup() {
+      const opcion = opciones[Math.floor(Math.random() * opciones.length)];
+      document.getElementById('ticketText').innerText = opcion;
+      document.getElementById('overlay').style.display = 'block';
+      document.getElementById('popup').style.display = 'block';
+
+      // Guardamos la opción para usarla al crear PDF
+      window.opcionActual = opcion;
+    }
+
+    function cerrarPopup() {
+      document.getElementById('overlay').style.display = 'none';
+      document.getElementById('popup').style.display = 'none';
+    }
+
+    async function descargarPDF() {
+      // Usamos jsPDF para crear el PDF desde canvas
+
+      const { jsPDF } = window.jspdf;
+
+      const pdf = new jsPDF({
+        unit: 'pt',
+        format: 'a4'
+      });
+
+      // Cargar la imagen goko como Image object para dibujar en canvas
+      const img = new Image();
+      img.crossOrigin = "anonymous";  // Por si la imagen está en otro dominio
+      img.src = "img/goko.webp";
+
+      img.onload = function() {
+        const pageWidth = pdf.internal.pageSize.getWidth();
+        const pageHeight = pdf.internal.pageSize.getHeight();
+
+        // Crear un canvas para dibujar imagen + texto
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+
+        // Definimos tamaño del canvas proporcional al PDF
+        canvas.width = pageWidth;
+        canvas.height = pageHeight;
+
+        // Fondo blanco para el PDF
+        ctx.fillStyle = 'white';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        // Dibujar imagen centrada horizontalmente y con margen arriba
+        const imgMaxWidth = canvas.width * 0.8;
+        const scale = imgMaxWidth / img.width;
+        const imgWidth = img.width * scale;
+        const imgHeight = img.height * scale;
+        const imgX = (canvas.width - imgWidth) / 2;
+        const imgY = 60;
+        ctx.drawImage(img, imgX, imgY, imgWidth, imgHeight);
+
+        // Dibujar texto debajo
+        ctx.fillStyle = 'black';
+        ctx.font = "bold 24pt Arial";
+        ctx.textAlign = "center";
+        ctx.fillText(window.opcionActual || "Texto no definido", canvas.width / 2, imgY + imgHeight + 60);
+
+        // Convertir canvas a imagen base64
+        const imgData = canvas.toDataURL("image/jpeg", 1.0);
+
+        // Agregar imagen al PDF
+        pdf.addImage(imgData, 'JPEG', 0, 0, pageWidth, pageHeight);
+
+        // Guardar PDF
+        pdf.save("ticket_goko.pdf");
+      };
+
+      img.onerror = function() {
+        alert("No se pudo cargar la imagen para generar el PDF.");
+      };
+    }
+  </script>
+</body>
+</html>
